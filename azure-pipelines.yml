@@ -1,26 +1,82 @@
+trigger:
+  branches:
+    include:
+    - master
 pool:
   name: Default
   demands:
-  - agent.name -equals Local
-trigger:
-  - master
-steps:
-  - task: CopyFiles@2
-    displayName: 'Copy Files to: $(build.artifactstagingdirectory)/Templates'
-    inputs:
-      SourceFolder: deployment
-      Contents: '*.json'
-      TargetFolder: '$(build.artifactstagingdirectory)/Templates'
-  - task: Npm@1
-    displayName: 'npm custom'
-    inputs:
-      command: custom
-      verbose: false
-      customCommand: 'install --production'
-  - task: ArchiveFiles@2
-    displayName: 'Archive $(Build.SourcesDirectory)'
-    inputs:
-      rootFolderOrFile: '$(Build.SourcesDirectory)'
-      includeRootFolder: false
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: drop'
+  - agent.name -equals Servidor2
+variables:
+- name: buildConfiguration
+  value: 'Release'
+stages:
+- stage: Build
+  jobs:
+  - job: Job1
+    steps:
+    - task: CmdLine@2
+      displayName: 'Compilacion del proyecto'
+      inputs:
+        script: echo building...
+    - task: UseDotNet@2
+      displayName: 'Install .NET Core SDK'
+      inputs:
+        version: '6.x'
+        includePreviewVersions: true
+        performMultiLevelLookup: true
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: build
+        arguments: '--configuration $(buildConfiguration)'
+      displayName: 'dotnet build $(buildConfiguration)'
+  - job: Job2
+    dependsOn:
+    - Job1
+    steps:
+    - task: CmdLine@2
+      displayName: 'Compilacion del proyecto'
+      inputs:
+        script: echo backup de data...
+- stage: DevDeploy
+  dependsOn:
+  - Build
+  jobs:
+  - job: Job1
+    steps:
+    - task: CmdLine@2
+      displayName: 'Descargando del proyecto'
+      inputs:
+        script: echo descargando proyecto...
+    - task: CmdLine@2
+      displayName: 'Desplegando del proyecto'
+      inputs:
+        script: echo desplegando proyecto...
+- stage: StgDeploy
+  dependsOn:
+  - Build
+  jobs:
+  - job: Job1
+    steps:
+    - task: CmdLine@2
+      displayName: 'Descargando del proyecto'
+      inputs:
+        script: echo descargando proyecto...
+    - task: CmdLine@2
+      displayName: 'Desplegando del proyecto'
+      inputs:
+        script: echo desplegando proyecto...
+- stage: ProdDeploy
+  dependsOn:
+  - Build
+  - StgDeploy
+  jobs:
+  - job: Job1
+    steps:
+    - task: CmdLine@2
+      displayName: 'Descargando del proyecto'
+      inputs:
+        script: echo descargando proyecto...
+    - task: CmdLine@2
+      displayName: 'Desplegando del proyecto'
+      inputs:
+        script: echo desplegando proyecto...
