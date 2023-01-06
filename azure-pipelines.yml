@@ -4,8 +4,6 @@ trigger:
     - master
 pool:
   name: Local
-  demands:
-  - agent.name -equals Servidor2
 variables:
 - name: buildConfiguration
   value: 'Release'
